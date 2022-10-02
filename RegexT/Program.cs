@@ -17,7 +17,7 @@ Size tiles = new(Convert.ToInt32(tilesS[0]), Convert.ToInt32(tilesS[1]));
 string[] pageS = param[2].Split(' ');
 SizeF page = new(Convert.ToSingle(pageS[0]), Convert.ToSingle(pageS[1]));
 string[] overS = param[3].Split(' ');
-SizeF overscan = new(Convert.ToSingle(overS[0]), Convert.ToSingle(overS[1]));
+float upS = Convert.ToSingle(overS[0]), rightS = Convert.ToSingle(overS[1]), downS = Convert.ToSingle(overS[2]), leftS = Convert.ToSingle(overS[3]);
 
 Stopwatch stopwatch = Stopwatch.StartNew();
 using (Image image = await Image.LoadAsync(filename))
@@ -60,21 +60,18 @@ using (Image image = await Image.LoadAsync(filename))
         }));
     }
     Size imgSize = new(
-        (int)((page.Width - overscan.Width * 2) * cmToInch * dpi), 
-        (int)((page.Height - overscan.Height * 2) * cmToInch * dpi));
-    Size imgShift = new(
-        (int)(overscan.Width * cmToInch * dpi), 
-        (int)(overscan.Height * cmToInch * dpi));
+        (int)((page.Width - rightS - leftS) * cmToInch * dpi), 
+        (int)((page.Height - upS - downS) * cmToInch * dpi));
     for (int i = 0; i < tiles.Width; i++)
     {
         for (int j = 0; j < tiles.Height; j++)
         {
             Image tile = image.Clone(x => x.Crop(new Rectangle() 
             {
-                X = i * imgSize.Width + (i > 0 ? imgShift.Width : 0),
-                Y = j * imgSize.Height + (j > 0 ? imgShift.Height : 0),
-                Width = imgSize.Width + imgShift.Width * 2,
-                Height = imgSize.Height + imgShift.Height * 2
+                X = i * imgSize.Width + (i > 0 ? (int)(leftS * cmToInch * dpi) : 0),
+                Y = j * imgSize.Height + (j > 0 ? (int)(upS * cmToInch * dpi) : 0),
+                Width = imgSize.Width + (int)((leftS + rightS) * cmToInch * dpi),
+                Height = imgSize.Height + (int)((upS + downS) * cmToInch * dpi)
             }));
 
             await tile.SaveAsync($@"I:\Serials\Tiled-{j}-{i}.jpg", 
